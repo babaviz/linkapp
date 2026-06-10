@@ -1,0 +1,3 @@
+# Referral links: /r/CODE serves landing page (force rewrite)
+/r/*  /r/index.html  200!
+

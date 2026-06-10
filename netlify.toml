@@ -1,0 +1,51 @@
+# Netlify Configuration for LinkApp
+# Domain: link-app.co
+
+[build]
+  # Build command for functions
+  command = "cd netlify/functions && npm install"
+  # Functions directory
+  functions = "netlify/functions"
+  # Publish directory (minimal)
+  publish = "netlify/public"
+  # No framework detection
+  ignore = "false"
+
+[build.environment]
+  # Node version for functions
+  NODE_VERSION = "18"
+  # Disable framework detection
+  NETLIFY_USE_YARN = "false"
+  NETLIFY_USE_NPM = "true"
+
+# Disable all framework plugins
+[context.production]
+  command = "cd netlify/functions && npm install"
+  publish = "netlify/public"
+
+# Function configuration
+[functions]
+  # Directory for functions (set in build section)
+  node_bundler = "esbuild"
+
+# Headers for security
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Environment variables (set these in Netlify dashboard)
+# PAYSTACK_SECRET_KEY
+# EXPO_PUBLIC_SUPABASE_URL
+# SUPABASE_SERVICE_ROLE_KEY
+
+# Referral links: /r/CODE must serve the landing page (rewrite, not redirect)
+[[redirects]]
+  from = "/r/*"
+  to = "/r/index.html"
+  status = 200
+  force = true
+

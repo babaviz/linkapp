@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkApp - Connect, Discover, Thrive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 800px;
+        }
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        .tagline {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+            opacity: 0.85;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .feature h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .cta {
+            font-size: 1.2rem;
+            margin-top: 2rem;
+        }
+        .cta-text {
+            margin-bottom: 1rem;
+        }
+        .download-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .btn:hover {
+            background: #fff;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            .tagline {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LinkApp</h1>
+        <p class="tagline">Connect, Discover, Thrive</p>
+        <p class="description">
+            Your all-in-one platform for property listings, service discovery, job opportunities, and meaningful connections. 
+            Built for modern Nigeria.
+        </p>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🏠 Properties</h3>
+                <p>Find your dream home or list your property</p>
+            </div>
+            <div class="feature">
+                <h3>💼 Jobs</h3>
+                <p>Discover opportunities and connect with talent</p>
+            </div>
+            <div class="feature">
+                <h3>🛠️ Services</h3>
+                <p>Browse trusted service providers</p>
+            </div>
+            <div class="feature">
+                <h3>💝 DateMi</h3>
+                <p>Make meaningful connections</p>
+            </div>
+        </div>
+
+        <div class="cta">
+            <p class="cta-text">Download LinkApp Today</p>
+            <div class="download-buttons">
+                <a href="#" class="btn">Coming Soon to App Store</a>
+                <a href="#" class="btn">Coming Soon to Play Store</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinkApp Referral</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #2e3a8c 0%, #2563eb 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+      }
+      .card {
+        width: 100%;
+        max-width: 520px;
+        padding: 24px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      h1 {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      p {
+        opacity: 0.92;
+        line-height: 1.5;
+      }
+      .pill {
+        margin-top: 14px;
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+      .actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      a.button {
+        display: inline-block;
+        padding: 12px 14px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        color: #111827;
+        background: #ffffff;
+      }
+      a.button.secondary {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      .small {
+        margin-top: 14px;
+        font-size: 12px;
+        opacity: 0.85;
+      }
+      .error {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(220, 38, 38, 0.35);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Opening LinkApp…</h1>
+      <p id="subtitle">Hang tight — we’re redirecting you.</p>
+      <div id="codePill" class="pill" style="display: none"></div>
+
+      <div class="actions">
+        <a id="openAppBtn" class="button secondary" href="#" style="display: none">Open LinkApp</a>
+        <a id="installBtn" class="button" href="#" style="display: none">Install from Play Store</a>
+      </div>
+
+      <div id="errorBox" class="error" style="display: none">
+        <p><strong>Invalid referral link.</strong></p>
+        <p class="small">Please ask your friend to resend the referral link.</p>
+      </div>
+
+      <p class="small">
+        If you’re not redirected automatically, use the buttons above.
+      </p>
+    </div>
+
+    <script>
+      (function () {
+        function extractCodeFromPath(pathname) {
+          // Expected: /r/<CODE>
+          if (!pathname) return null;
+          var trimmed = pathname.replace(/\/+$/, '');
+          var parts = trimmed.split('/');
+          var idx = parts.indexOf('r');
+          var candidate = idx >= 0 ? parts[idx + 1] : null;
+          if (!candidate) return null;
+          var match = String(candidate).match(/[A-Za-z0-9]{4,32}/);
+          return match ? match[0].toUpperCase() : null;
+        }
+
+        var code = extractCodeFromPath(window.location.pathname);
+        var subtitle = document.getElementById('subtitle');
+        var codePill = document.getElementById('codePill');
+        var errorBox = document.getElementById('errorBox');
+        var openAppBtn = document.getElementById('openAppBtn');
+        var installBtn = document.getElementById('installBtn');
+
+        if (!code) {
+          subtitle.textContent = 'This referral link is missing a code.';
+          errorBox.style.display = 'block';
+          return;
+        }
+
+        codePill.textContent = 'CODE ' + code;
+        codePill.style.display = 'inline-block';
+
+        // Canonical in-app deep link (also matched by https://link-app.co/r/<CODE>)
+        var deepLink = 'linkapp://r/' + encodeURIComponent(code);
+        // Play Install Referrer expects an encoded query-string inside `referrer=`.
+        var referrerPayload =
+          'utm_source=linkapp&utm_medium=referral&utm_campaign=referral_program&referral_code=' +
+          encodeURIComponent(code);
+        var playStoreUrl =
+          'https://play.google.com/store/apps/details?id=co.linkapp.android&referrer=' +
+          encodeURIComponent(referrerPayload);
+
+        openAppBtn.href = deepLink;
+        installBtn.href = playStoreUrl;
+        openAppBtn.style.display = 'inline-block';
+        installBtn.style.display = 'inline-block';
+
+        // Android-first behavior: try opening the app if installed, otherwise fall back to Play Store.
+        var isAndroid = /Android/i.test(navigator.userAgent || '');
+        if (isAndroid) {
+          // Attempt to open the app.
+          window.location.href = deepLink;
+
+          // Fallback to Play Store after a short delay if the app isn't installed.
+          setTimeout(function () {
+            window.location.href = playStoreUrl;
+          }, 1200);
+        } else {
+          // Non-Android: just attempt the deep link (future iOS support), keep manual fallback visible.
+          subtitle.textContent = 'Tap “Open LinkApp” to continue.';
+        }
+      })();
+    </script>
+  </body>
+</html>
+

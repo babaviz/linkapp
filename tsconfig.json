@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "skipLibCheck": true,
+    "jsx": "react-native",
+    "types": ["jest", "node"],
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "downlevelIteration": true,
+    
+    "module": "preserve",
+    "moduleDetection": "force",
+    "customConditions": [
+      "react-native"
+    ],
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "target": "ESNext"
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "types/**/*.d.ts",
+    "index.ts",
+    "App.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "__tests__",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "scripts",
+    "supabase/functions",
+    "coverage",
+    "App.full-broken.tsx",
+    "App.*backup*.tsx",
+    "App.*-backup.tsx",
+    "**/*.backup.ts",
+    "**/*.backup.tsx",
+    "node_modules/expo/babel.config.js",
+    "node_modules/expo/metro.config.js",
+    "node_modules/expo/jest.config.js"
+  ],
+  "extends": "./node_modules/expo/tsconfig.base.json"
+}

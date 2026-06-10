@@ -1,0 +1,301 @@
+{
+  "cli": {
+    "version": ">= 5.9.0",
+    "appVersionSource": "local",
+    "requireCommit": false
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "disabled",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "1",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Debug"
+      },
+      "cache": {
+        "disabled": false
+      }
+    },
+    "local": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "disabled",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "cache": {
+        "disabled": false
+      }
+    },
+    "preview": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      },
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "EXPO_PUBLIC_APP_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.linkapp.com",
+        "EXPO_PUBLIC_APP_URL": "https://link-app.co",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "minimal",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "0",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "channel": "preview",
+      "cache": {
+        "disabled": false
+      }
+    },
+    "testing": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "buildConfiguration": "Debug"
+      },
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_APP_ENV": "testing",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.linkapp.com",
+        "EXPO_PUBLIC_APP_URL": "https://link-app.co",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "firebase",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "0",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "channel": "testing",
+      "cache": {
+        "disabled": false
+      }
+    },
+    "standalone-test": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "EXPO_PUBLIC_APP_ENV": "testing",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.linkapp.com",
+        "EXPO_PUBLIC_APP_URL": "https://link-app.co",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "firebase",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "0",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "channel": "standalone-test",
+      "cache": {
+        "disabled": false
+      },
+      "developmentClient": false,
+      "ios": {
+        "buildConfiguration": "Release"
+      }
+    },
+    "production": {
+      "developmentClient": false,
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease",
+        "image": "latest"
+      },
+      "ios": {
+        "buildConfiguration": "Release",
+        "image": "latest"
+      },
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.linkapp.com",
+        "EXPO_PUBLIC_APP_URL": "https://link-app.co",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "NODE_OPTIONS": "--max-old-space-size=8192",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "firebase",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "0",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "channel": "production",
+      "cache": {
+        "disabled": false
+      }
+    },
+    "playstore": {
+      "developmentClient": false,
+      "distribution": "store",
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease",
+        "image": "latest"
+      },
+      "ios": {
+        "buildConfiguration": "Release",
+        "image": "latest"
+      },
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.linkapp.com",
+        "EXPO_PUBLIC_APP_URL": "https://link-app.co",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "NODE_OPTIONS": "--max-old-space-size=8192",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "firebase",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "0",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "channel": "production",
+      "cache": {
+        "disabled": false
+      }
+    },
+    "playstore-apk": {
+      "developmentClient": false,
+      "distribution": "store",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "image": "latest"
+      },
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.linkapp.com",
+        "EXPO_PUBLIC_APP_URL": "https://link-app.co",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "NODE_OPTIONS": "--max-old-space-size=8192",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "firebase",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "0",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "channel": "production",
+      "cache": {
+        "disabled": false
+      }
+    },
+    "local-server": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "JAVA_VERSION": "17",
+        "NODE_VERSION": "20.19.5",
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_STREAM_CHAT_API_KEY": "mbk9t7mk8z22",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://alyrtfczemrahupffrbe.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseXJ0ZmN6ZW1yYWh1cGZmcmJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MjY3MTcsImV4cCI6MjA5MzIwMjcxN30.BfjzYQx8aqhcnpPGSUi8uuA4ZZRfP0zCyvOHKQBfC6o",
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000",
+        "EXPO_PUBLIC_APP_URL": "http://localhost:8081",
+        "EXPO_PUBLIC_NOTIFICATIONS_MODE": "disabled",
+        "EXPO_PUBLIC_NOTIFICATIONS_DISABLED": "1",
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "324566167513-olp8063e9gn29i4lumui05dkdpfltqqu.apps.googleusercontent.com"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Debug"
+      },
+      "cache": {
+        "disabled": false
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "production",
+        "releaseStatus": "draft"
+      },
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "your-app-store-connect-app-id",
+        "appleTeamId": "your-apple-team-id"
+      }
+    },
+    "playstore": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "production",
+        "releaseStatus": "draft"
+      }
+    },
+    "preview": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "your-app-store-connect-app-id",
+        "appleTeamId": "your-apple-team-id"
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+﻿{
+  "id": "fc10405e-225f-4516-bfc7-8f1009884f73",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "EAS_BUILD_UNKNOWN_GRADLE_ERROR",
+    "message": "Gradle build failed with unknown error. See logs for the \"Run gradlew\" phase for more information."
+  },
+  "artifacts": {},
+  "fingerprint": {
+    "id": "dd6cbe99-a7fe-4752-b54e-365a26b7ec6d",
+    "hash": "fbf026fd0a4d69c9b563f1fb9769335b26aee87d"
+  },
+  "initiatingActor": {
+    "id": "ef3523c9-14ad-4475-b346-01db83905ac3",
+    "displayName": "linkapp254"
+  },
+  "logFiles": [
+    "https://job-logs.eascdn.net/production/fc10405e-225f-4516-bfc7-8f1009884f73/1765522424274-337efebc-d756-496a-887b-f0ae732255f6.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251212%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251212T072945Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=97b74f6c87e712abf8a36e2f78220fb1bc2aacfce49d006514653baf8b08470ca0b0306d68f5cd05fa2810bc310bd790952f01ed55b85101480a7c56084cf15c2fb300f92921bb764f464c0559fb4e7c8341f2c8415189809427da65e8a1340391d296932edcb2a5aa670570775e512e7f8862609fcd872e3c9370ea258c3614da30809a8fa92cdff0e020c11332fb9fed3781555ba82e3603b0ddebca89f30c8f5aefa6f73c5d17b1087fac5bc6a624b34efeb3dcec18d0c814ea9507370c1f35a268ad8a6f0cd5bfb2dfe04f8966ce91531e16a1f1786595350f5ffe6929216e96aaf92f53a4d1040cbff718a83aaf25d7568666dae310517bb14148f82652",
+    "https://job-logs.eascdn.net/production/fc10405e-225f-4516-bfc7-8f1009884f73/1765522426566-f8e60f28-b6cf-498b-a12c-72f6e978e607.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251212%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251212T072945Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=70057ad215c42df4001e9d3661730da268b3f001e4df4b75d27b0a08c43c0af90970cf5d7ad57ca2e3cd0869ed86d2c3e18dc0dce23511b199a62a4e1b22f44305cb25f3388f972f07eb8b60abc8d7062fcf5a63edc76dcdb121116137f23d43cd3ac423a9ca33f7593c507b82f79ace92ccd1254802d9b7935dc3ed054dea5a72d80c6e91a8b0ea7b8ba25ceb370995eec365039e7e320ec259f8f4cb1dc99a1fd4064163e4c51bbbe798fa2762ad9f5abe3590ae12ba71431fad46073e65946f94611fd02a85ad672f1ff53e07210d5c7f5bd4651343cfea67f4e46091962df579a31ec75a45ce632f40b24d0a835119edccb8e2fb2a6fb7d9e291deb81888",
+    "https://job-logs.eascdn.net/production/fc10405e-225f-4516-bfc7-8f1009884f73/1765522426783-15367e3e-1147-4d74-8937-3ad0cd50c8e3.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251212%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251212T072945Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=378597b94d1f35a9d9c4f88e462018717beddeb570b9ad63839c83f06c0a899b022833c38cac6ab85a5bbcd014e4d93cacb9ed82c81ec69f62ff8ab01b5bec5432e55d5eba353b1bc0b3a3c96c1e7a4a55fb27eb306feb3aca64ce9b3128a7f681df16140c2ba59032085b3b8be4083a92fe48b2695ec0f4e13b49e43f1cb5beb5b436ed69c0cd04554e168226f0a9b138a11227b0c1a7e4cffffbff2ce5fd1f92fa97a792e077bdd8a6a46eada2ec784f1f1975f8928b43c5de73683e67bed326694112b44de1ecc75d9f389048df582d25b2a702d6b29d681e1c5470f6696943cef8751f54c32cd1a09625568ca05ef70051375ddf28c5456452bdc8bfdda1",
+    "https://job-logs.eascdn.net/production/fc10405e-225f-4516-bfc7-8f1009884f73/1765522426970-6f8e7076-cfae-4a6f-9a62-41a34106c1c8.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20251212%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20251212T072945Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=52cb4c102d5644aac976bb08d44cf29ebe6849915279e36fd7dd91ba9805538f16d022273b94f2812ec531939a74cbea5afbe7586059f2aa2666ee496bf1f5b5df39a948d693735770fcdc653dc12e28c2eb2a87f6d298a57c33556830fd2fd29b6312e11faef87db1df5b66dc0dcdbfc88825364c9b0b2191e13a5ed8663d8cb9bb8c0bb7685dfda84b7753c7da8e2d9f524004259e8e81e726488781d361d36f9c2b0f18db66aecfd0f1c9cd3eb449ff70cdad138cac3254a1d5dc906112bbfc248e0fb5c3b604a2e9083696b7b99614f35ea6dd81989c157a808c530c871611febf71caeae53f96664b5e61713cceab8286ebd3f41591d9e681503ef39f7a"
+  ],
+  "project": {
+    "id": "402581b8-56d4-4633-a9e0-d2055d70b2c1",
+    "name": "linkapp",
+    "slug": "linkapp",
+    "ownerAccount": {
+      "id": "f7399b66-2a67-48bd-946e-5e005c3de828",
+      "name": "linkapp254"
+    }
+  },
+  "channel": "production",
+  "distribution": "INTERNAL",
+  "buildProfile": "development",
+  "sdkVersion": "54.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "1",
+  "runtimeVersion": "1.0.0",
+  "gitCommitHash": "927e33ec14c6219c5375e451a64db561d95b22d0",
+  "gitCommitMessage": "Refactor subscription management components and enhance user experience",
+  "priority": "NORMAL",
+  "createdAt": "2025-12-12T06:53:43.920Z",
+  "updatedAt": "2025-12-12T06:58:11.364Z",
+  "completedAt": "2025-12-12T06:58:07.159Z",
+  "expirationDate": "2025-12-26T06:53:43.996Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 233,
+    "buildQueueTime": 44549,
+    "buildDuration": 218178
+  }
+}
