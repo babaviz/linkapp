@@ -51,73 +51,28 @@ type FilterMode = 'all' | 'user';
 
 export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, onUploadPress }) => {
   const [videos, setVideos] = useState<ShortVideo[]>([]);
-  const [filteredVideos, setFilteredVideos] = useState<ShortVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentVisibleIndex, setCurrentVisibleIndex] = useState(0);
   const [likingVideoId, setLikingVideoId] = useState<string | null>(null);
   const [favoritingVideoId, setFavoritingVideoId] = useState<string | null>(null);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
+  const [deletingVideoId, setDeletingVideoId] = useState<string | null>(null);
   const videoRefs = useRef<Map<string, Video>>(new Map());
   const flatListRef = useRef<FlatList>(null);
   const [selectedVideoForComments, setSelectedVideoForComments] = useState<ShortVideo | null>(null);
+  const [showDeleteMenu, setShowDeleteMenu] = useState<string | null>(null);
 
   useEffect(() => {
     loadVideos();
-  }, []);
-
-  // Apply filter whenever videos or filterMode changes
-  useEffect(() => {
-    applyFilter();
-  }, [videos, filterMode]);
-
-  const applyFilter = () => {
-    if (filterMode === 'user' && userId) {
-      // First try to filter by userId
-      let userVideos = videos.filter(v => v.userId === userId);
-      
-      // If no videos found by userId, try filtering by userProfileId
-      if (userVideos.length === 0) {
-        userVideos = videos.filter(v => v.userProfileId === userId);
-      }
-      
-      setFilteredVideos(userVideos);
-    } else {
-      setFilteredVideos(videos);
-    }
-    
-    // Reset current visible index when filter changes
-    setCurrentVisibleIndex(0);
-    
-    // Scroll to top when filter changes
-    if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ offset: 0, animated: false });
-    }
-  };
-
-  const toggleFilter = () => {
-    if (!userId) {
-      Alert.alert('Sign in required', 'Please sign in to view your videos.');
-      return;
-    }
-    
-    const newFilterMode = filterMode === 'all' ? 'user' : 'all';
-    setFilterMode(newFilterMode);
-    
-    // Show feedback
-    Alert.alert(
-      newFilterMode === 'user' ? 'Showing Your Videos' : 'Showing All Videos',
-      newFilterMode === 'user' ? 'Now showing only videos you\'ve uploaded.' : 'Now showing all videos from everyone.',
-      [{ text: 'OK' }]
-    );
-  };
+  }, [filterMode]); // Reload when filter mode changes
 
   const loadVideos = async () => {
     try {
       setLoading(true);
       
-      // First, get the videos
-      const { data: videosData, error: videosError } = await supabase
+      // Build query based on filter mode
+      let query = supabase
         .from('date_mi_short_videos')
         .select(`
           id,
@@ -132,8 +87,17 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
           views_count,
           created_at
         `)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .eq('is_active', true);
+
+      // Apply user filter if needed
+      if (filterMode === 'user' && userId) {
+        query = query.eq('user_id', userId);
+      }
+
+      // Order by most recent
+      query = query.order('created_at', { ascending: false });
+
+      const { data: videosData, error: videosError } = await query;
 
       if (videosError) throw videosError;
 
@@ -200,6 +164,12 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
       });
 
       setVideos(formattedVideos);
+      
+      // Reset current visible index
+      setCurrentVisibleIndex(0);
+      if (flatListRef.current) {
+        flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+      }
     } catch (error) {
       const friendly = getUserFacingError(error, {
         action: 'load videos',
@@ -215,6 +185,84 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
   const handleRefresh = () => {
     setRefreshing(true);
     loadVideos();
+  };
+
+  const toggleFilter = () => {
+    if (!userId) {
+      Alert.alert('Sign in required', 'Please sign in to view your videos.');
+      return;
+    }
+    
+    const newFilterMode = filterMode === 'all' ? 'user' : 'all';
+    setFilterMode(newFilterMode);
+  };
+
+  const handleDeleteVideo = async (video: ShortVideo) => {
+    Alert.alert(
+      'Delete Video',
+      'Are you sure you want to delete this video? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingVideoId(video.id);
+            try {
+              // First, delete all associated likes
+              await supabase
+                .from('date_mi_video_likes')
+                .delete()
+                .eq('video_id', video.id);
+
+              // Delete all associated favorites
+              await supabase
+                .from('date_mi_video_favorites')
+                .delete()
+                .eq('video_id', video.id);
+
+              // Delete all comments
+              await supabase
+                .from('date_mi_video_comments')
+                .delete()
+                .eq('video_id', video.id);
+
+              // Delete from storage first
+              const filePath = video.videoUrl.split('/datemi-short-videos/')[1];
+              const { error: storageError } = await supabase.storage
+                .from('datemi-short-videos')
+                .remove([filePath]);
+
+              if (storageError) throw storageError;
+
+              // Finally, delete the video
+              const { error: deleteError } = await supabase
+                .from('date_mi_short_videos')
+                .delete()
+                .eq('id', video.id);
+
+              if (deleteError) throw deleteError;
+
+              // Remove video from state
+              setVideos(prev => prev.filter(v => v.id !== video.id));
+              
+              // Close delete menu
+              setShowDeleteMenu(null);
+              
+              Alert.alert('Success', 'Video deleted successfully');
+            } catch (error) {
+              const friendly = getUserFacingError(error, {
+                action: 'delete video',
+                displayStyle: 'alert',
+              });
+              Alert.alert(friendly.title, friendly.message);
+            } finally {
+              setDeletingVideoId(null);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const handleLike = async (video: ShortVideo) => {
@@ -362,7 +410,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
       const newIndex = viewableItems[0].index;
       if (newIndex !== currentVisibleIndex && newIndex !== undefined) {
         // Pause previous video
-        const prevVideo = videoRefs.current.get(filteredVideos[currentVisibleIndex]?.id);
+        const prevVideo = videoRefs.current.get(videos[currentVisibleIndex]?.id);
         if (prevVideo) {
           prevVideo.pauseAsync();
         }
@@ -373,10 +421,11 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
         incrementViews(videoId);
       }
     }
-  }, [currentVisibleIndex, filteredVideos]);
+  }, [currentVisibleIndex, videos]);
 
   const renderVideoItem = ({ item, index }: { item: ShortVideo; index: number }) => {
     const isVisible = index === currentVisibleIndex;
+    const isOwnVideo = userId === item.userId;
     
     return (
       <View style={styles.videoContainer}>
@@ -391,6 +440,45 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
           posterSource={item.thumbnailUrl ? { uri: item.thumbnailUrl } : undefined}
           posterStyle={styles.videoPoster}
         />
+        
+        {/* Delete Menu Modal */}
+        <Modal
+          visible={showDeleteMenu === item.id}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowDeleteMenu(null)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setShowDeleteMenu(null)}
+          >
+            <View style={styles.deleteMenuContainer}>
+              <View style={styles.deleteMenu}>
+                <TouchableOpacity 
+                  style={styles.deleteMenuItem}
+                  onPress={() => handleDeleteVideo(item)}
+                  disabled={deletingVideoId === item.id}
+                >
+                  {deletingVideoId === item.id ? (
+                    <ActivityIndicator size="small" color="#EF4444" />
+                  ) : (
+                    <>
+                      <Ionicons name="trash-outline" size={24} color="#EF4444" />
+                      <Text style={styles.deleteMenuItemText}>Delete Video</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.deleteMenuCancel}
+                  onPress={() => setShowDeleteMenu(null)}
+                >
+                  <Text style={styles.deleteMenuCancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Modal>
         
         {/* Gradient Overlay */}
         <LinearGradient
@@ -419,7 +507,6 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
             style={styles.actionButton}
             onPress={() => handleLike(item)}
             disabled={likingVideoId === item.id}
-            
           >
             <Ionicons
               name={item.isLiked ? 'heart' : 'heart-outline'}
@@ -451,6 +538,16 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
             />
             <Text style={styles.actionCount}>{item.favorites}</Text>
           </TouchableOpacity>
+
+          {/* Delete Button - Only for user's own videos */}
+          {isOwnVideo && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => setShowDeleteMenu(item.id)}
+            >
+              <Ionicons name="trash-outline" size={32} color="#EF4444" />
+            </TouchableOpacity>
+          )}
         </View>
         
         {/* Bottom Info */}
@@ -471,40 +568,6 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
     );
   };
 
-  // Show empty state for user filter when no user videos
-  if (filteredVideos.length === 0 && !loading && filterMode === 'user') {
-    return (
-      <>
-        <View style={styles.centerContainer}>
-          <Ionicons name="person-outline" size={80} color="#6012f1" />
-          <Text style={styles.emptyTitle}>No Videos Yet</Text>
-          <Text style={styles.emptyText}>You haven't uploaded any videos.</Text>
-          <TouchableOpacity style={styles.uploadEmptyButton} onPress={onUploadPress}>
-            <Text style={styles.uploadEmptyButtonText}>Upload Your First Video</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Filter Button - still visible */}
-        <TouchableOpacity 
-          style={styles.filterFloatingButton} 
-          onPress={toggleFilter}
-          activeOpacity={0.8}
-        >
-          <View style={styles.filterButtonContent}>
-            <Ionicons 
-              name={filterMode === 'all' ? 'people-outline' : 'person-outline'} 
-              size={24} 
-              color="#FFFFFF" 
-            />
-            <Text style={styles.filterButtonText}>
-              {filterMode === 'all' ? 'All' : 'My'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </>
-    );
-  }
-
   if (loading && videos.length === 0) {
     return (
       <View style={styles.centerContainer}>
@@ -515,13 +578,22 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
   }
 
   if (videos.length === 0 && !loading) {
+    const isUserFilter = filterMode === 'user';
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.emptyIcon}>🎬</Text>
-        <Text style={styles.emptyTitle}>No Videos Yet</Text>
-        <Text style={styles.emptyText}>Be the first to upload a short video!</Text>
+        <Text style={styles.emptyTitle}>
+          {isUserFilter ? 'No Videos Yet' : 'No Videos Available'}
+        </Text>
+        <Text style={styles.emptyText}>
+          {isUserFilter 
+            ? "You haven't uploaded any videos yet." 
+            : "Be the first to upload a short video!"}
+        </Text>
         <TouchableOpacity style={styles.uploadEmptyButton} onPress={onUploadPress}>
-          <Text style={styles.uploadEmptyButtonText}>Upload Video</Text>
+          <Text style={styles.uploadEmptyButtonText}>
+            {isUserFilter ? 'Upload Your First Video' : 'Upload Video'}
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -531,7 +603,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
     <>
       <FlatList
         ref={flatListRef}
-        data={filteredVideos}
+        data={videos}
         renderItem={renderVideoItem}
         keyExtractor={(item) => item.id}
         pagingEnabled
@@ -606,12 +678,11 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 350,
     alignItems: 'center',
-    gap: 0,
+    gap: 8,
   },
   actionButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    justifyContent: 'center',
     paddingHorizontal: 5,
     paddingVertical: 5,
   },
@@ -731,5 +802,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     marginTop: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteMenuContainer: {
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  deleteMenu: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  deleteMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    gap: 12,
+  },
+  deleteMenuItemText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '600',
+    alignItems:'center'
+  },
+  deleteMenuCancel: {
+    padding: 16,
+  },
+  deleteMenuCancelText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });

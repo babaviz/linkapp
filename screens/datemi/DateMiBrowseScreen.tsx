@@ -163,7 +163,7 @@ const FancyTab: React.FC<{
           ]}
         >
           <LinearGradient
-            colors={['#FFFFFF', '#F8FAFC']}
+            colors={activeTab === 'short_term' ? ['#FFFFFF', '#F8FAFC']:['#3b3b3b', '#64686b']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.tabActiveBackgroundGradient}
@@ -185,11 +185,6 @@ const FancyTab: React.FC<{
               Short Term
             </Text>
           </View>
-          {activeTab === 'short_term' && (
-            <View style={styles.tabNotch}>
-              <View style={styles.tabNotchInner} />
-            </View>
-          )}
         </TouchableOpacity>
 
         {/* Short Videos Tab */}
@@ -202,16 +197,11 @@ const FancyTab: React.FC<{
             <Text style={styles.tabEmoji}>🎬</Text>
             <Text style={[
               styles.tabButtonText,
-              activeTab === 'short_videos' && styles.tabButtonTextActive
+              activeTab === 'short_videos' && styles.tabButtonTextActive,{color: '#f9f8fc'}
             ]}>
               Short Videos
             </Text>
           </View>
-          {activeTab === 'short_videos' && (
-            <View style={styles.tabNotch}>
-              <View style={styles.tabNotchInner} />
-            </View>
-          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -640,7 +630,7 @@ export default function DateMiBrowseScreen() {
       />
       
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.header, { paddingTop: insets.top,backgroundColor: activeTab === 'short_term' ?'rgba(107, 70, 193, 0.95)':'rgb(0, 0, 0)' }]}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <Text style={styles.emoji}>{activeTab === 'short_term' ? '💕' : '🎬'}</Text>
@@ -755,7 +745,7 @@ const styles = StyleSheet.create({
   },
   tabGlowContainer: {
     position: 'absolute',
-    top: -20,
+    top: -10,
     left: 0,
     right: 0,
     height: 40,
@@ -764,7 +754,7 @@ const styles = StyleSheet.create({
   },
   tabGlow: {
     width: screenWidth * 0.7,
-    height: 30,
+    height: 0,
     borderRadius: 15,
     opacity: 0.5,
   },
@@ -815,23 +805,6 @@ const styles = StyleSheet.create({
   },
   tabButtonTextActive: {
     color: '#6B46C1',
-  },
-  tabNotch: {
-    position: 'absolute',
-    bottom: -8,
-    width: 40,
-    height: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabNotchInner: {
-    width: 24,
-    height: 8,
-    backgroundColor: '#FFFFFF',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
   },
   
   profileCard: { width: cardWidth, marginBottom: 6 },
