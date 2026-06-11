@@ -371,6 +371,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
             style={styles.actionButton}
             onPress={() => handleLike(item)}
             disabled={likingVideoId === item.id}
+            
           >
             <Ionicons
               name={item.isLiked ? 'heart' : 'heart-outline'}
@@ -499,7 +500,11 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   actionButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
   },
   actionAvatar: {
     width: 48,
