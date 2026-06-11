@@ -1,4 +1,4 @@
-// DateMiBrowseScreen.tsx - Updated with Video Feed and Dating Tabs
+// DateMiBrowseScreen.tsx - Updated with Notch-like Tab Design
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { 
   View, 
@@ -13,7 +13,8 @@ import {
   FlatList, 
   ListRenderItem,
   Alert,
-  ScrollView
+  ScrollView,
+  Animated
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
@@ -122,6 +123,100 @@ const ProfileCard: React.FC<ProfileCardProps> = React.memo(({ profile, onPressPr
     </TouchableOpacity>
   );
 });
+
+// Fancy Tab Component with Notch-like Design
+const FancyTab: React.FC<{
+  activeTab: TabType;
+  onTabPress: (tab: TabType) => void;
+}> = ({ activeTab, onTabPress }) => {
+  const slideAnim = useRef(new Animated.Value(activeTab === 'short_term' ? 0 : 1)).current;
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: activeTab === 'short_term' ? 0 : 1,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 12,
+    }).start();
+  }, [activeTab]);
+
+  const indicatorPosition = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, screenWidth / 2],
+  });
+
+  return (
+    <View style={styles.tabOuterContainer}>
+      <View style={styles.tabGlowContainer}>
+        <LinearGradient
+          colors={['rgba(107, 70, 193, 0.3)', 'rgba(107, 70, 193, 0)']}
+          style={styles.tabGlow}
+        />
+      </View>
+      
+      <View style={styles.tabWrapper}>
+        {/* Animated Sliding Background */}
+        <Animated.View 
+          style={[
+            styles.tabActiveBackground,
+            { transform: [{ translateX: indicatorPosition }] }
+          ]}
+        >
+          <LinearGradient
+            colors={['#FFFFFF', '#F8FAFC']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.tabActiveBackgroundGradient}
+          />
+        </Animated.View>
+
+        {/* Short Term Tab */}
+        <TouchableOpacity
+          style={styles.tabButton}
+          onPress={() => onTabPress('short_term')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.tabContent}>
+            <Text style={styles.tabEmoji}>🔥</Text>
+            <Text style={[
+              styles.tabButtonText,
+              activeTab === 'short_term' && styles.tabButtonTextActive
+            ]}>
+              Short Term
+            </Text>
+          </View>
+          {activeTab === 'short_term' && (
+            <View style={styles.tabNotch}>
+              <View style={styles.tabNotchInner} />
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Short Videos Tab */}
+        <TouchableOpacity
+          style={styles.tabButton}
+          onPress={() => onTabPress('short_videos')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.tabContent}>
+            <Text style={styles.tabEmoji}>🎬</Text>
+            <Text style={[
+              styles.tabButtonText,
+              activeTab === 'short_videos' && styles.tabButtonTextActive
+            ]}>
+              Short Videos
+            </Text>
+          </View>
+          {activeTab === 'short_videos' && (
+            <View style={styles.tabNotch}>
+              <View style={styles.tabNotchInner} />
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
 
 export default function DateMiBrowseScreen() {
   const navigation = useNavigation<DateMiBrowseNavigationProp>();
@@ -345,7 +440,6 @@ export default function DateMiBrowseScreen() {
         onPress={() => setShowMenu(false)}
       >
         <View style={styles.modalContainer}>
-          {/* Modal Header */}
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderIcon}>
               <LinearGradient
@@ -370,7 +464,6 @@ export default function DateMiBrowseScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.modalScrollContent}
           >
-            {/* Profile Section */}
             <TouchableOpacity
               style={styles.menuSection}
               onPress={() => handleMenuPress('profile')}
@@ -394,6 +487,7 @@ export default function DateMiBrowseScreen() {
               <Feather name="chevron-right" size={20} color="#D1D5DB" />
             </TouchableOpacity>
 
+            {activeTab === 'short_videos' && (
               <TouchableOpacity
                 style={styles.menuSection}
                 onPress={() => handleMenuPress('upload')}
@@ -408,10 +502,10 @@ export default function DateMiBrowseScreen() {
                 </View>
                 <Feather name="chevron-right" size={20} color="#D1D5DB" />
               </TouchableOpacity>
+            )}
 
             <View style={styles.menuDivider} />
 
-            {/* Matches */}
             <TouchableOpacity
               style={styles.menuSection}
               onPress={() => handleMenuPress('matches')}
@@ -427,7 +521,6 @@ export default function DateMiBrowseScreen() {
               <Feather name="chevron-right" size={20} color="#D1D5DB" />
             </TouchableOpacity>
 
-            {/* Chats */}
             <TouchableOpacity
               style={styles.menuSection}
               onPress={() => handleMenuPress('chats')}
@@ -445,7 +538,6 @@ export default function DateMiBrowseScreen() {
 
             <View style={styles.menuDivider} />
 
-            {/* Search */}
             <TouchableOpacity
               style={styles.menuSection}
               onPress={() => handleMenuPress('search')}
@@ -461,7 +553,6 @@ export default function DateMiBrowseScreen() {
               <Feather name="chevron-right" size={20} color="#D1D5DB" />
             </TouchableOpacity>
 
-            {/* Filters */}
             <TouchableOpacity
               style={styles.menuSection}
               onPress={() => handleMenuPress('filters')}
@@ -477,7 +568,6 @@ export default function DateMiBrowseScreen() {
               <Feather name="chevron-right" size={20} color="#D1D5DB" />
             </TouchableOpacity>
 
-            {/* Nearby */}
             <TouchableOpacity
               style={styles.menuSection}
               onPress={() => handleMenuPress('nearby')}
@@ -495,7 +585,6 @@ export default function DateMiBrowseScreen() {
 
             <View style={styles.menuDivider} />
 
-            {/* Safety */}
             <TouchableOpacity
               style={styles.menuSection}
               onPress={() => handleMenuPress('safety')}
@@ -511,7 +600,6 @@ export default function DateMiBrowseScreen() {
               <Feather name="chevron-right" size={20} color="#D1D5DB" />
             </TouchableOpacity>
 
-            {/* Premium */}
             <TouchableOpacity
               style={[styles.menuSection, styles.premiumSection]}
               onPress={() => handleMenuPress('premium')}
@@ -530,7 +618,6 @@ export default function DateMiBrowseScreen() {
             </TouchableOpacity>
           </ScrollView>
 
-          {/* Modal Footer */}
           <View style={styles.modalFooter}>
             <Text style={styles.modalFooterText}>Date Mi • Version 1.0.0</Text>
           </View>
@@ -558,7 +645,7 @@ export default function DateMiBrowseScreen() {
           <View style={styles.headerLeft}>
             <Text style={styles.emoji}>{activeTab === 'short_term' ? '💕' : '🎬'}</Text>
             <StandardScreenTitle color="#FFFFFF" testID="datemi-screen-title">
-              {activeTab === 'short_term' ? 'Short Term Dating' : 'Short Videos'}
+              Date Mi
             </StandardScreenTitle>
             
             <View style={styles.ageIndicator}>
@@ -571,29 +658,8 @@ export default function DateMiBrowseScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Tab Toggle */}
-        <View style={styles.toggleContainer}>
-          <View style={styles.toggleWrapper}>
-            <TouchableOpacity
-              style={[styles.toggleButton, activeTab === 'short_term' && styles.toggleButtonActive]}
-              onPress={() => handleTabPress('short_term')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.toggleButtonText, activeTab === 'short_term' && styles.toggleButtonTextActive]}>
-                🔥 Short Term Dating
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleButton, activeTab === 'short_videos' && styles.toggleButtonActive]}
-              onPress={() => handleTabPress('short_videos')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.toggleButtonText, activeTab === 'short_videos' && styles.toggleButtonTextActive]}>
-                🎬 Short Videos
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Fancy Notch-like Tabs */}
+        <FancyTab activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
 
       {/* Content based on active tab */}
@@ -647,8 +713,7 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: 'rgba(107, 70, 193, 0.95)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    borderBottomWidth: 0,
   },
   headerContent: {
     flexDirection: 'row',
@@ -682,18 +747,93 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.25)',
   },
-  toggleContainer: { paddingHorizontal: 0, paddingBottom: 0 },
-  toggleWrapper: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 0,
-    padding: 0,
-    gap: 4,
+  
+  // Fancy Tab Styles
+  tabOuterContainer: {
+    position: 'relative',
+    marginTop: 0,
   },
-  toggleButton: { flex: 1, paddingVertical: 5, borderRadius: 0, alignItems: 'center' },
-  toggleButtonActive: { backgroundColor: '#FFFFFF' },
-  toggleButtonText: { fontSize: 15, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
-  toggleButtonTextActive: { color: '#6B46C1' },
+  tabGlowContainer: {
+    position: 'absolute',
+    top: -20,
+    left: 0,
+    right: 0,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabGlow: {
+    width: screenWidth * 0.7,
+    height: 30,
+    borderRadius: 15,
+    opacity: 0.5,
+  },
+  tabWrapper: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    marginHorizontal: 20,
+    marginBottom: 0,
+    borderRadius: 30,
+    padding: 4,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  tabActiveBackground: {
+    position: 'absolute',
+    width: '50%',
+    height: '100%',
+    borderRadius: 28,
+    overflow: 'hidden',
+    top: 0,
+    left: 0,
+  },
+  tabActiveBackgroundGradient: {
+    flex: 1,
+    borderRadius: 28,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 28,
+    position: 'relative',
+    zIndex: 1,
+  },
+  tabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tabEmoji: {
+    fontSize: 18,
+  },
+  tabButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  tabButtonTextActive: {
+    color: '#6B46C1',
+  },
+  tabNotch: {
+    position: 'absolute',
+    bottom: -8,
+    width: 40,
+    height: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabNotchInner: {
+    width: 24,
+    height: 8,
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+  },
+  
   profileCard: { width: cardWidth, marginBottom: 6 },
   profileImageContainer: { position: 'relative', aspectRatio: 3/4, borderRadius: 16, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   profileImage: { width: '100%', height: '100%' },
@@ -774,7 +914,7 @@ const styles = StyleSheet.create({
   },
   modalScrollView: {
     flex: 1,
-    minHeight:500
+    minHeight: 500,
   },
   modalScrollContent: {
     paddingVertical: 8,
