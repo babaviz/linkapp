@@ -1,0 +1,543 @@
+// components/datemi/VideoFeed.tsx
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Dimensions,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Alert,
+  Modal,RefreshControl
+} from 'react-native';
+import { Video, ResizeMode } from 'expo-av';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { supabase } from '../../services/supabaseClient';
+import { DateMiProfileService } from '../../services/dateMiService';
+import { getUserFacingError } from '../../utils/userFacingError';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+export interface ShortVideo {
+  id: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  userId: string;
+  userProfileId: string;
+  displayName: string;
+  profilePicture?: string;
+  caption?: string;
+  likes: number;
+  comments: number;
+  favorites: number;
+  views: number;
+  isLiked: boolean;
+  isFavorited: boolean;
+  createdAt: string;
+}
+
+interface VideoFeedProps {
+  userId?: string;
+  onProfilePress: (profileId: string) => void;
+  onUploadPress: () => void;
+}
+
+export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, onUploadPress }) => {
+  const [videos, setVideos] = useState<ShortVideo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentVisibleIndex, setCurrentVisibleIndex] = useState(0);
+  const [likingVideoId, setLikingVideoId] = useState<string | null>(null);
+  const [favoritingVideoId, setFavoritingVideoId] = useState<string | null>(null);
+  const videoRefs = useRef<Map<string, Video>>(new Map());
+  const flatListRef = useRef<FlatList>(null);
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
+  // In VideoFeed.tsx, replace the existing loadVideos function with this:
+
+const loadVideos = async () => {
+  try {
+    setLoading(true);
+    
+    // First, get the videos
+    const { data: videosData, error: videosError } = await supabase
+      .from('date_mi_short_videos')
+      .select(`
+        id,
+        video_url,
+        thumbnail_url,
+        user_id,
+        profile_id,
+        caption,
+        likes_count,
+        comments_count,
+        favorites_count,
+        views_count,
+        created_at
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (videosError) throw videosError;
+
+    if (!videosData || videosData.length === 0) {
+      setVideos([]);
+      setLoading(false);
+      return;
+    }
+
+    // Get all unique profile IDs
+    const profileIds = [...new Set(videosData.map(v => v.profile_id).filter(Boolean))];
+    
+    // Fetch profiles separately
+    let profilesMap = new Map();
+    if (profileIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('date_mi_profiles')
+        .select('id, user_id, display_name, profile_pictures')
+        .in('id', profileIds);
+
+      if (!profilesError && profilesData) {
+        profilesMap = new Map(profilesData.map(p => [p.id, p]));
+      }
+    }
+
+    // Get user's liked/favorited videos
+    let likedVideoIds: Set<string> = new Set();
+    let favoritedVideoIds: Set<string> = new Set();
+    
+    if (userId) {
+      const [likesResult, favoritesResult] = await Promise.all([
+        supabase.from('date_mi_video_likes').select('video_id').eq('user_id', userId),
+        supabase.from('date_mi_video_favorites').select('video_id').eq('user_id', userId),
+      ]);
+      
+      if (likesResult.data) {
+        likedVideoIds = new Set(likesResult.data.map(l => l.video_id));
+      }
+      if (favoritesResult.data) {
+        favoritedVideoIds = new Set(favoritesResult.data.map(f => f.video_id));
+      }
+    }
+
+    // Format videos with profile data
+    const formattedVideos: ShortVideo[] = videosData.map(item => {
+      const profile = profilesMap.get(item.profile_id);
+      return {
+        id: item.id,
+        videoUrl: item.video_url,
+        thumbnailUrl: item.thumbnail_url,
+        userId: item.user_id,
+        userProfileId: profile?.id || item.profile_id,
+        displayName: profile?.display_name || 'User',
+        profilePicture: profile?.profile_pictures?.[0],
+        caption: item.caption,
+        likes: item.likes_count || 0,
+        comments: item.comments_count || 0,
+        favorites: item.favorites_count || 0,
+        views: item.views_count || 0,
+        isLiked: likedVideoIds.has(item.id),
+        isFavorited: favoritedVideoIds.has(item.id),
+        createdAt: item.created_at,
+      };
+    });
+
+    setVideos(formattedVideos);
+  } catch (error) {
+    const friendly = getUserFacingError(error, {
+      action: 'load videos',
+      displayStyle: 'alert',
+    });
+    Alert.alert(friendly.title, friendly.message);
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadVideos();
+  };
+
+  const handleLike = async (video: ShortVideo) => {
+    if (!userId) {
+      Alert.alert('Sign in required', 'Please sign in to like videos.');
+      return;
+    }
+
+    setLikingVideoId(video.id);
+    
+    try {
+      const newIsLiked = !video.isLiked;
+      const likeDelta = newIsLiked ? 1 : -1;
+
+      // Optimistic update
+      setVideos(prev => prev.map(v =>
+        v.id === video.id
+          ? { ...v, isLiked: newIsLiked, likes: v.likes + likeDelta }
+          : v
+      ));
+
+      if (newIsLiked) {
+        await supabase.from('date_mi_video_likes').insert({
+          video_id: video.id,
+          user_id: userId,
+        });
+      } else {
+        await supabase.from('date_mi_video_likes')
+          .delete()
+          .eq('video_id', video.id)
+          .eq('user_id', userId);
+      }
+
+      await supabase.rpc('increment_video_likes', {
+        video_id: video.id,
+        delta: likeDelta,
+      });
+    } catch (error) {
+      // Revert on error
+      setVideos(prev => prev.map(v =>
+        v.id === video.id
+          ? { ...v, isLiked: video.isLiked, likes: video.likes }
+          : v
+      ));
+      const friendly = getUserFacingError(error, {
+        action: newIsLiked ? 'like this video' : 'unlike this video',
+        displayStyle: 'alert',
+      });
+      Alert.alert(friendly.title, friendly.message);
+    } finally {
+      setLikingVideoId(null);
+    }
+  };
+
+  const handleFavorite = async (video: ShortVideo) => {
+    if (!userId) {
+      Alert.alert('Sign in required', 'Please sign in to favorite videos.');
+      return;
+    }
+
+    setFavoritingVideoId(video.id);
+    
+    try {
+      const newIsFavorited = !video.isFavorited;
+      const favoriteDelta = newIsFavorited ? 1 : -1;
+
+      setVideos(prev => prev.map(v =>
+        v.id === video.id
+          ? { ...v, isFavorited: newIsFavorited, favorites: v.favorites + favoriteDelta }
+          : v
+      ));
+
+      if (newIsFavorited) {
+        await supabase.from('date_mi_video_favorites').insert({
+          video_id: video.id,
+          user_id: userId,
+        });
+      } else {
+        await supabase.from('date_mi_video_favorites')
+          .delete()
+          .eq('video_id', video.id)
+          .eq('user_id', userId);
+      }
+
+      await supabase.rpc('increment_video_favorites', {
+        video_id: video.id,
+        delta: favoriteDelta,
+      });
+    } catch (error) {
+      setVideos(prev => prev.map(v =>
+        v.id === video.id
+          ? { ...v, isFavorited: video.isFavorited, favorites: video.favorites }
+          : v
+      ));
+      const friendly = getUserFacingError(error, {
+        action: newIsFavorited ? 'favorite this video' : 'remove favorite',
+        displayStyle: 'alert',
+      });
+      Alert.alert(friendly.title, friendly.message);
+    } finally {
+      setFavoritingVideoId(null);
+    }
+  };
+
+  const incrementViews = async (videoId: string) => {
+    try {
+      await supabase.rpc('increment_video_views', { video_id: videoId });
+    } catch {
+      // Silent fail for view counting
+    }
+  };
+
+  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      const newIndex = viewableItems[0].index;
+      if (newIndex !== currentVisibleIndex && newIndex !== undefined) {
+        // Pause previous video
+        const prevVideo = videoRefs.current.get(videos[currentVisibleIndex]?.id);
+        if (prevVideo) {
+          prevVideo.pauseAsync();
+        }
+        setCurrentVisibleIndex(newIndex);
+        
+        // Increment view count for the new video
+        const videoId = viewableItems[0].item.id;
+        incrementViews(videoId);
+      }
+    }
+  }, [currentVisibleIndex, videos]);
+
+  const renderVideoItem = ({ item, index }: { item: ShortVideo; index: number }) => {
+    const isVisible = index === currentVisibleIndex;
+    
+    return (
+      <View style={styles.videoContainer}>
+        <Video
+          ref={ref => ref && videoRefs.current.set(item.id, ref)}
+          source={{ uri: item.videoUrl }}
+          style={styles.video}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay={isVisible}
+          isLooping
+          useNativeControls={false}
+          posterSource={item.thumbnailUrl ? { uri: item.thumbnailUrl } : undefined}
+          posterStyle={styles.videoPoster}
+        />
+        
+        {/* Gradient Overlay */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.7)']}
+          style={styles.gradientOverlay}
+        />
+        
+        {/* Right Side Actions */}
+        <View style={styles.actionsContainer}>
+          {/* Profile Button */}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => onProfilePress(item.userProfileId)}
+          >
+            {item.profilePicture ? (
+              <Image source={{ uri: item.profilePicture }} style={styles.actionAvatar} />
+            ) : (
+              <View style={styles.actionAvatarPlaceholder}>
+                <Ionicons name="person" size={24} color="#FFFFFF" />
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          {/* Like Button */}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleLike(item)}
+            disabled={likingVideoId === item.id}
+          >
+            <Ionicons
+              name={item.isLiked ? 'heart' : 'heart-outline'}
+              size={36}
+              color={item.isLiked ? '#EF4444' : '#6012f1'}
+            />
+            <Text style={styles.actionCount}>{item.likes}</Text>
+          </TouchableOpacity>
+          
+          {/* Comment Button */}
+          <TouchableOpacity style={styles.actionButton}>
+            <Ionicons name="chatbubble-outline" size={32} color="#6012f1" />
+            <Text style={styles.actionCount}>{item.comments}</Text>
+          </TouchableOpacity>
+          
+          {/* Favorite Button */}
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleFavorite(item)}
+            disabled={favoritingVideoId === item.id}
+          >
+            <Ionicons
+              name={item.isFavorited ? 'bookmark' : 'bookmark-outline'}
+              size={32}
+              color={item.isFavorited ? '#F59E0B' : '#6012f1'}
+            />
+            <Text style={styles.actionCount}>{item.favorites}</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Bottom Info */}
+        <View style={styles.bottomInfo}>
+          <TouchableOpacity
+            style={styles.userInfo}
+            onPress={() => onProfilePress(item.userProfileId)}
+          >
+            <Text style={styles.displayName}>{item.displayName}</Text>
+          </TouchableOpacity>
+          {item.caption && (
+            <Text style={styles.caption} numberOfLines={2}>
+              {item.caption}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  if (loading && videos.length === 0) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={styles.loadingText}>Loading videos...</Text>
+      </View>
+    );
+  }
+
+  if (videos.length === 0 && !loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text style={styles.emptyIcon}>🎬</Text>
+        <Text style={styles.emptyTitle}>No Videos Yet</Text>
+        <Text style={styles.emptyText}>Be the first to upload a short video!</Text>
+        <TouchableOpacity style={styles.uploadEmptyButton} onPress={onUploadPress}>
+          <Text style={styles.uploadEmptyButtonText}>Upload Video</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      ref={flatListRef}
+      data={videos}
+      renderItem={renderVideoItem}
+      keyExtractor={(item) => item.id}
+      pagingEnabled
+      showsVerticalScrollIndicator={false}
+      onViewableItemsChanged={onViewableItemsChanged}
+      viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FFFFFF" />
+      }
+      initialNumToRender={3}
+      maxToRenderPerBatch={3}
+      windowSize={5}
+    />
+  );
+};
+
+const styles = StyleSheet.create({
+  videoContainer: {
+    width: screenWidth,
+    height: screenHeight,
+    backgroundColor: '#000',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  videoPoster: {
+    resizeMode: 'cover',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 200,
+  },
+  actionsContainer: {
+    position: 'absolute',
+    right: 16,
+    bottom: 350,
+    alignItems: 'center',
+    gap: 0,
+  },
+  actionButton: {
+    alignItems: 'center',
+  },
+  actionAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  actionAvatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  actionCount: {
+    color: '#6012f1',
+    fontSize: 12,
+    marginTop: 0,
+    fontWeight: '500',
+  },
+  bottomInfo: {
+    position: 'absolute',
+    bottom: 40,
+    left: 16,
+    right: 80,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  displayName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  caption: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    lineHeight: 20,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  uploadEmptyButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 28,
+  },
+  uploadEmptyButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
