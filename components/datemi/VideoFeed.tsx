@@ -10,7 +10,8 @@ import {
   Image,
   ActivityIndicator,
   Alert,
-  Modal,RefreshControl
+  Modal,
+  RefreshControl
 } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -46,23 +47,70 @@ interface VideoFeedProps {
   onUploadPress: () => void;
 }
 
+type FilterMode = 'all' | 'user';
+
 export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, onUploadPress }) => {
   const [videos, setVideos] = useState<ShortVideo[]>([]);
+  const [filteredVideos, setFilteredVideos] = useState<ShortVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentVisibleIndex, setCurrentVisibleIndex] = useState(0);
   const [likingVideoId, setLikingVideoId] = useState<string | null>(null);
   const [favoritingVideoId, setFavoritingVideoId] = useState<string | null>(null);
+  const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const videoRefs = useRef<Map<string, Video>>(new Map());
   const flatListRef = useRef<FlatList>(null);
   const [selectedVideoForComments, setSelectedVideoForComments] = useState<ShortVideo | null>(null);
-
 
   useEffect(() => {
     loadVideos();
   }, []);
 
-  // In VideoFeed.tsx, replace the existing loadVideos function with this:
+  // Apply filter whenever videos or filterMode changes
+  useEffect(() => {
+    applyFilter();
+  }, [videos, filterMode]);
+
+  const applyFilter = () => {
+    if (filterMode === 'user' && userId) {
+      // First try to filter by userId
+      let userVideos = videos.filter(v => v.userId === userId);
+      
+      // If no videos found by userId, try filtering by userProfileId
+      if (userVideos.length === 0) {
+        userVideos = videos.filter(v => v.userProfileId === userId);
+      }
+      
+      setFilteredVideos(userVideos);
+    } else {
+      setFilteredVideos(videos);
+    }
+    
+    // Reset current visible index when filter changes
+    setCurrentVisibleIndex(0);
+    
+    // Scroll to top when filter changes
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+    }
+  };
+
+  const toggleFilter = () => {
+    if (!userId) {
+      Alert.alert('Sign in required', 'Please sign in to view your videos.');
+      return;
+    }
+    
+    const newFilterMode = filterMode === 'all' ? 'user' : 'all';
+    setFilterMode(newFilterMode);
+    
+    // Show feedback
+    Alert.alert(
+      newFilterMode === 'user' ? 'Showing Your Videos' : 'Showing All Videos',
+      newFilterMode === 'user' ? 'Now showing only videos you\'ve uploaded.' : 'Now showing all videos from everyone.',
+      [{ text: 'OK' }]
+    );
+  };
 
   const loadVideos = async () => {
     try {
@@ -314,7 +362,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
       const newIndex = viewableItems[0].index;
       if (newIndex !== currentVisibleIndex && newIndex !== undefined) {
         // Pause previous video
-        const prevVideo = videoRefs.current.get(videos[currentVisibleIndex]?.id);
+        const prevVideo = videoRefs.current.get(filteredVideos[currentVisibleIndex]?.id);
         if (prevVideo) {
           prevVideo.pauseAsync();
         }
@@ -325,7 +373,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
         incrementViews(videoId);
       }
     }
-  }, [currentVisibleIndex, videos]);
+  }, [currentVisibleIndex, filteredVideos]);
 
   const renderVideoItem = ({ item, index }: { item: ShortVideo; index: number }) => {
     const isVisible = index === currentVisibleIndex;
@@ -419,16 +467,43 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
             </Text>
           )}
         </View>
-
-        <VideoCommentsModal
-            visible={!!selectedVideoForComments}
-            onClose={() => setSelectedVideoForComments(null)}
-            videoId={selectedVideoForComments?.id || ''}
-            userId={userId}
-          />
       </View>
     );
   };
+
+  // Show empty state for user filter when no user videos
+  if (filteredVideos.length === 0 && !loading && filterMode === 'user') {
+    return (
+      <>
+        <View style={styles.centerContainer}>
+          <Ionicons name="person-outline" size={80} color="#6012f1" />
+          <Text style={styles.emptyTitle}>No Videos Yet</Text>
+          <Text style={styles.emptyText}>You haven't uploaded any videos.</Text>
+          <TouchableOpacity style={styles.uploadEmptyButton} onPress={onUploadPress}>
+            <Text style={styles.uploadEmptyButtonText}>Upload Your First Video</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Filter Button - still visible */}
+        <TouchableOpacity 
+          style={styles.filterFloatingButton} 
+          onPress={toggleFilter}
+          activeOpacity={0.8}
+        >
+          <View style={styles.filterButtonContent}>
+            <Ionicons 
+              name={filterMode === 'all' ? 'people-outline' : 'person-outline'} 
+              size={24} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.filterButtonText}>
+              {filterMode === 'all' ? 'All' : 'My'}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </>
+    );
+  }
 
   if (loading && videos.length === 0) {
     return (
@@ -453,22 +528,56 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
   }
 
   return (
-    <FlatList
-      ref={flatListRef}
-      data={videos}
-      renderItem={renderVideoItem}
-      keyExtractor={(item) => item.id}
-      pagingEnabled
-      showsVerticalScrollIndicator={false}
-      onViewableItemsChanged={onViewableItemsChanged}
-      viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FFFFFF" />
-      }
-      initialNumToRender={3}
-      maxToRenderPerBatch={3}
-      windowSize={5}
-    />
+    <>
+      <FlatList
+        ref={flatListRef}
+        data={filteredVideos}
+        renderItem={renderVideoItem}
+        keyExtractor={(item) => item.id}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#FFFFFF" />
+        }
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+      />
+      
+      {/* Floating Filter Button */}
+      <TouchableOpacity 
+        style={styles.filterFloatingButton} 
+        onPress={toggleFilter}
+        activeOpacity={0.8}
+      >
+        <LinearGradient
+          colors={filterMode === 'all' ? ['#6012f1', '#8b5cf6'] : ['#EF4444', '#F97316']}
+          style={styles.filterButtonGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.filterButtonContent}>
+            <Ionicons 
+              name={filterMode === 'all' ? 'people-outline' : 'person-outline'} 
+              size={24} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.filterButtonText}>
+              {filterMode === 'all' ? 'All' : 'My'}
+            </Text>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+
+      <VideoCommentsModal
+        visible={!!selectedVideoForComments}
+        onClose={() => setSelectedVideoForComments(null)}
+        videoId={selectedVideoForComments?.id || ''}
+        userId={userId}
+      />
+    </>
   );
 };
 
@@ -555,6 +664,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
+    backgroundColor: '#000',
   },
   loadingText: {
     marginTop: 16,
@@ -587,5 +697,39 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  filterFloatingButton: {
+    position: 'absolute',
+    bottom: 120,
+    right: 16,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+    zIndex: 1000,
+  },
+  filterButtonGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterButtonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginTop: 2,
   },
 });
