@@ -12,7 +12,8 @@ import {
   TextInput, 
   FlatList, 
   ListRenderItem,
-  Alert
+  Alert,
+  ScrollView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
@@ -28,7 +29,7 @@ import { useProfileLoader } from '../../hooks/useProfileLoader';
 import { DateMiProfile } from '../../redux/slices/datemiSlice';
 import { StandardScreenTitle } from '../../components/common';
 import { useScreenshotPrevention } from '../../utils/dateMiSecurity';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons, Feather, FontAwesome5 } from '@expo/vector-icons';
 import { useDateMiPresence } from '../../hooks/useDateMiPresence';
 import { ProfileGridSkeleton } from '../../components/datemi/ProfileCardSkeleton';
 import { LEGACY_PLAY_STORE_REVIEWER_USER_IDS } from '../../utils/playStoreReviewer';
@@ -254,6 +255,7 @@ export default function DateMiBrowseScreen() {
   };
 
   const handleProfileActionPress = () => {
+    setShowMenu(false);
     if (myProfile) {
       navigation.navigate('DateMiProfileSettings');
     } else {
@@ -266,6 +268,9 @@ export default function DateMiBrowseScreen() {
     switch (action) {
       case 'profile':
         handleProfileActionPress();
+        break;
+      case 'upload':
+        setShowUploadModal(true);
         break;
       case 'matches':
         navigation.navigate('Matches');
@@ -326,6 +331,214 @@ export default function DateMiBrowseScreen() {
   const isProfilesLoading = profilesLoading && filteredProfiles.length === 0;
   const shouldShowProfilesError = !!profilesError && !profilesLoading && filteredProfiles.length === 0;
 
+  // Professional Menu Modal Component
+  const renderProfessionalMenuModal = () => (
+    <Modal 
+      visible={showMenu} 
+      transparent 
+      animationType="fade" 
+      onRequestClose={() => setShowMenu(false)}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay} 
+        activeOpacity={1} 
+        onPress={() => setShowMenu(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Modal Header */}
+          <View style={styles.modalHeader}>
+            <View style={styles.modalHeaderIcon}>
+              <LinearGradient
+                colors={['#6B46C1', '#553C9A']}
+                style={styles.modalHeaderGradient}
+              >
+                <FontAwesome5 name="heart" size={22} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.modalTitle}>Date Mi</Text>
+            <Text style={styles.modalSubtitle}>Discover meaningful connections</Text>
+            <TouchableOpacity 
+              style={styles.modalCloseButton} 
+              onPress={() => setShowMenu(false)}
+            >
+              <Feather name="x" size={22} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView 
+            style={styles.modalScrollView}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.modalScrollContent}
+          >
+            {/* Profile Section */}
+            <TouchableOpacity
+              style={styles.menuSection}
+              onPress={() => handleMenuPress('profile')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.profileIconBg]}>
+                {myProfile ? (
+                  <FontAwesome5 name="user-circle" size={22} color="#6B46C1" />
+                ) : (
+                  <MaterialIcons name="person-add" size={22} color="#6B46C1" />
+                )}
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>
+                  {myProfile ? 'My Profile' : 'Create Profile'}
+                </Text>
+                <Text style={styles.menuDescription}>
+                  {myProfile ? 'View and edit your dating profile' : 'Get started with Date Mi'}
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.menuSection}
+                onPress={() => handleMenuPress('upload')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.menuIconContainer, styles.uploadIconBg]}>
+                  <Feather name="video" size={22} color="#EF4444" />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={styles.menuTitle}>Upload Video</Text>
+                  <Text style={styles.menuDescription}>Share a short video with the community</Text>
+                </View>
+                <Feather name="chevron-right" size={20} color="#D1D5DB" />
+              </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            {/* Matches */}
+            <TouchableOpacity
+              style={styles.menuSection}
+              onPress={() => handleMenuPress('matches')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.matchesIconBg]}>
+                <FontAwesome5 name="heart" size={20} color="#EC4899" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>My Matches</Text>
+                <Text style={styles.menuDescription}>View all your mutual matches</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+
+            {/* Chats */}
+            <TouchableOpacity
+              style={styles.menuSection}
+              onPress={() => handleMenuPress('chats')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.chatsIconBg]}>
+                <Feather name="message-circle" size={20} color="#3B82F6" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Messages</Text>
+                <Text style={styles.menuDescription}>Chat with your connections</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            {/* Search */}
+            <TouchableOpacity
+              style={styles.menuSection}
+              onPress={() => handleMenuPress('search')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.searchIconBg]}>
+                <Feather name="search" size={20} color="#8B5CF6" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Search</Text>
+                <Text style={styles.menuDescription}>Find specific profiles</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+
+            {/* Filters */}
+            <TouchableOpacity
+              style={styles.menuSection}
+              onPress={() => handleMenuPress('filters')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.filtersIconBg]}>
+                <Feather name="sliders" size={20} color="#10B981" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Advanced Filters</Text>
+                <Text style={styles.menuDescription}>Customize your matching preferences</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+
+            {/* Nearby */}
+            <TouchableOpacity
+              style={styles.menuSection}
+              onPress={() => handleMenuPress('nearby')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.nearbyIconBg]}>
+                <Feather name="map-pin" size={20} color="#F59E0B" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Nearby</Text>
+                <Text style={styles.menuDescription}>Discover people around you</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+
+            <View style={styles.menuDivider} />
+
+            {/* Safety */}
+            <TouchableOpacity
+              style={styles.menuSection}
+              onPress={() => handleMenuPress('safety')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.safetyIconBg]}>
+                <Feather name="shield" size={20} color="#6366F1" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>Privacy & Safety</Text>
+                <Text style={styles.menuDescription}>Manage your security settings</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+
+            {/* Premium */}
+            <TouchableOpacity
+              style={[styles.menuSection, styles.premiumSection]}
+              onPress={() => handleMenuPress('premium')}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.menuIconContainer, styles.premiumIconBg]}>
+                <FontAwesome5 name="crown" size={20} color="#F59E0B" />
+              </View>
+              <View style={styles.menuTextContainer}>
+                <Text style={[styles.menuTitle, styles.premiumText]}>Go Premium</Text>
+                <Text style={styles.menuDescription}>Unlock unlimited features</Text>
+              </View>
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>PRO</Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+
+          {/* Modal Footer */}
+          <View style={styles.modalFooter}>
+            <Text style={styles.modalFooterText}>Date Mi • Version 1.0.0</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -354,7 +567,7 @@ export default function DateMiBrowseScreen() {
           </View>
           
           <TouchableOpacity onPress={() => setShowMenu(true)} style={styles.menuButton} activeOpacity={0.8}>
-            <Text style={styles.menuIcon}>⋯</Text>
+            <Feather name="menu" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
@@ -381,20 +594,6 @@ export default function DateMiBrowseScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Upload Button - only show on videos tab */}
-        {activeTab === 'short_videos' && (
-          <View style={styles.uploadHeader}>
-            <TouchableOpacity
-              onPress={() => setShowUploadModal(true)}
-              style={styles.uploadButton}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="add-circle" size={28} color="#FFFFFF" />
-              <Text style={styles.uploadButtonText}>Upload Video</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </View>
 
       {/* Content based on active tab */}
@@ -421,39 +620,11 @@ export default function DateMiBrowseScreen() {
         />
       )}
 
-      {/* Menu Modal */}
-      <Modal visible={showMenu} transparent animationType="fade" onRequestClose={() => setShowMenu(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowMenu(false)}>
-          <LinearGradient colors={['#6B46C1', '#553C9A', '#4C1D95']} style={styles.menuModal}>
-            <Text style={styles.menuTitle}>DateMi Menu</Text>
+      {/* Professional Menu Modal */}
+      {renderProfessionalMenuModal()}
 
-            {[
-              { key: 'profile', icon: myProfile ? '👤' : '➕', label: myProfile ? 'My profile & settings' : 'Create my profile' },
-              { key: 'matches', icon: '💘', label: 'My Matches' },
-              { key: 'chats', icon: '💬', label: 'My Chats' },
-              { key: 'search', icon: '🔍', label: 'Search profiles' },
-              { key: 'filters', icon: '⚙️', label: 'Advanced filters' },
-              { key: 'nearby', icon: '📍', label: 'Nearby connections' },
-              { key: 'safety', icon: '🛡️', label: 'Safety settings' },
-              { key: 'premium', icon: '💎', label: 'Subscription & Premium' }
-            ].map((item, index, arr) => (
-              <TouchableOpacity
-                key={item.key}
-                onPress={() => handleMenuPress(item.key)}
-                style={[styles.menuItem, index < arr.length - 1 && styles.menuItemMargin]}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.menuItemIcon}>{item.icon}</Text>
-                <Text style={styles.menuItemText}>{item.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </LinearGradient>
-        </TouchableOpacity>
-      </Modal>
-
-       {activeTab === 'short_term'?
-        <DateMiChatFab />
-        :null}
+      {/* Chat FAB - Only show on short term tab */}
+      {activeTab === 'short_term' && <DateMiChatFab />}
 
       {/* Upload Modal */}
       <VideoUploadModal
@@ -484,8 +655,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
+    paddingTop: 5,
+    paddingBottom: 5,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -502,31 +673,27 @@ const styles = StyleSheet.create({
   },
   ageIndicatorText: { color: '#FFFFFF', fontSize: 12, fontWeight: '500' },
   menuButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
-  menuIcon: { fontSize: 20, color: '#FFFFFF' },
-  toggleContainer: { paddingHorizontal: 20, paddingBottom: 16 },
+  toggleContainer: { paddingHorizontal: 0, paddingBottom: 0 },
   toggleWrapper: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
-    padding: 4,
+    borderRadius: 0,
+    padding: 0,
     gap: 4,
   },
-  toggleButton: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
+  toggleButton: { flex: 1, paddingVertical: 5, borderRadius: 0, alignItems: 'center' },
   toggleButtonActive: { backgroundColor: '#FFFFFF' },
   toggleButtonText: { fontSize: 15, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
   toggleButtonTextActive: { color: '#6B46C1' },
-  uploadHeader: { paddingHorizontal: 20, paddingBottom: 12, alignItems: 'flex-end' },
-  uploadButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, gap: 6 },
-  uploadButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '500' },
   profileCard: { width: cardWidth, marginBottom: 6 },
   profileImageContainer: { position: 'relative', aspectRatio: 3/4, borderRadius: 16, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
   profileImage: { width: '100%', height: '100%' },
@@ -539,13 +706,169 @@ const styles = StyleSheet.create({
   profileOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 12, paddingVertical: 12 },
   profileName: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 2 },
   profileLocation: { fontSize: 12, color: 'rgba(255,255,255,0.8)' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 },
-  menuModal: { borderRadius: 24, width: '100%', maxWidth: 380, padding: 32, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  menuTitle: { fontSize: 22, fontWeight: 'bold', color: '#FFFFFF', textAlign: 'center', marginBottom: 28 },
-  menuItem: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, padding: 20, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  menuItemMargin: { marginBottom: 16 },
-  menuItemIcon: { fontSize: 22, marginRight: 16 },
-  menuItemText: { fontSize: 16, color: '#FFFFFF', fontWeight: '500', flex: 1 },
+  
+  // Professional Modal Styles
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    minWidth: '100%',
+    minHeight: '95%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 15,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    paddingTop: 28,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+    position: 'relative',
+  },
+  modalHeaderIcon: {
+    marginBottom: 12,
+  },
+  modalHeaderGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#6B46C1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalScrollView: {
+    flex: 1,
+    minHeight:500
+  },
+  modalScrollContent: {
+    paddingVertical: 8,
+  },
+  menuSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    gap: 14,
+  },
+  menuIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileIconBg: {
+    backgroundColor: '#F3E8FF',
+  },
+  uploadIconBg: {
+    backgroundColor: '#FEE2E2',
+  },
+  matchesIconBg: {
+    backgroundColor: '#FCE7F3',
+  },
+  chatsIconBg: {
+    backgroundColor: '#DBEAFE',
+  },
+  searchIconBg: {
+    backgroundColor: '#EDE9FE',
+  },
+  filtersIconBg: {
+    backgroundColor: '#D1FAE5',
+  },
+  nearbyIconBg: {
+    backgroundColor: '#FEF3C7',
+  },
+  safetyIconBg: {
+    backgroundColor: '#E0E7FF',
+  },
+  premiumIconBg: {
+    backgroundColor: '#FEF3C7',
+  },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  menuDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  premiumText: {
+    color: '#F59E0B',
+  },
+  premiumSection: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
+  premiumBadge: {
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  premiumBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 20,
+    marginVertical: 4,
+  },
+  modalFooter: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  modalFooterText: {
+    fontSize: 11,
+    color: '#9CA3AF',
+  },
   profilePromptContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   profilePromptTitle: { fontSize: 28, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 16, textAlign: 'center', letterSpacing: 0.5 },
   profilePromptSubtitle: { fontSize: 16, color: 'rgba(255,255,255,0.85)', marginBottom: 40, textAlign: 'center', lineHeight: 24, maxWidth: 320 },
