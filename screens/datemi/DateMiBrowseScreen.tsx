@@ -451,8 +451,11 @@ export default function DateMiBrowseScreen() {
         </TouchableOpacity>
       </Modal>
 
-      <DateMiChatFab />
+       {activeTab === 'short_term'?
+        <DateMiChatFab />
+        :null}
 
+      {/* Upload Modal */}
       <VideoUploadModal
         visible={showUploadModal}
         onClose={() => setShowUploadModal(false)}

@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabaseClient';
 import { DateMiProfileService } from '../../services/dateMiService';
 import { getUserFacingError } from '../../utils/userFacingError';
+import { VideoCommentsModal } from './VideoCommentsModal';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -54,6 +55,8 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
   const [favoritingVideoId, setFavoritingVideoId] = useState<string | null>(null);
   const videoRefs = useRef<Map<string, Video>>(new Map());
   const flatListRef = useRef<FlatList>(null);
+  const [selectedVideoForComments, setSelectedVideoForComments] = useState<ShortVideo | null>(null);
+
 
   useEffect(() => {
     loadVideos();
@@ -61,105 +64,105 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ userId, onProfilePress, on
 
   // In VideoFeed.tsx, replace the existing loadVideos function with this:
 
-const loadVideos = async () => {
-  try {
-    setLoading(true);
-    
-    // First, get the videos
-    const { data: videosData, error: videosError } = await supabase
-      .from('date_mi_short_videos')
-      .select(`
-        id,
-        video_url,
-        thumbnail_url,
-        user_id,
-        profile_id,
-        caption,
-        likes_count,
-        comments_count,
-        favorites_count,
-        views_count,
-        created_at
-      `)
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
-
-    if (videosError) throw videosError;
-
-    if (!videosData || videosData.length === 0) {
-      setVideos([]);
-      setLoading(false);
-      return;
-    }
-
-    // Get all unique profile IDs
-    const profileIds = [...new Set(videosData.map(v => v.profile_id).filter(Boolean))];
-    
-    // Fetch profiles separately
-    let profilesMap = new Map();
-    if (profileIds.length > 0) {
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('date_mi_profiles')
-        .select('id, user_id, display_name, profile_pictures')
-        .in('id', profileIds);
-
-      if (!profilesError && profilesData) {
-        profilesMap = new Map(profilesData.map(p => [p.id, p]));
-      }
-    }
-
-    // Get user's liked/favorited videos
-    let likedVideoIds: Set<string> = new Set();
-    let favoritedVideoIds: Set<string> = new Set();
-    
-    if (userId) {
-      const [likesResult, favoritesResult] = await Promise.all([
-        supabase.from('date_mi_video_likes').select('video_id').eq('user_id', userId),
-        supabase.from('date_mi_video_favorites').select('video_id').eq('user_id', userId),
-      ]);
+  const loadVideos = async () => {
+    try {
+      setLoading(true);
       
-      if (likesResult.data) {
-        likedVideoIds = new Set(likesResult.data.map(l => l.video_id));
+      // First, get the videos
+      const { data: videosData, error: videosError } = await supabase
+        .from('date_mi_short_videos')
+        .select(`
+          id,
+          video_url,
+          thumbnail_url,
+          user_id,
+          profile_id,
+          caption,
+          likes_count,
+          comments_count,
+          favorites_count,
+          views_count,
+          created_at
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (videosError) throw videosError;
+
+      if (!videosData || videosData.length === 0) {
+        setVideos([]);
+        setLoading(false);
+        return;
       }
-      if (favoritesResult.data) {
-        favoritedVideoIds = new Set(favoritesResult.data.map(f => f.video_id));
+
+      // Get all unique profile IDs
+      const profileIds = [...new Set(videosData.map(v => v.profile_id).filter(Boolean))];
+      
+      // Fetch profiles separately
+      let profilesMap = new Map();
+      if (profileIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('date_mi_profiles')
+          .select('id, user_id, display_name, profile_pictures')
+          .in('id', profileIds);
+
+        if (!profilesError && profilesData) {
+          profilesMap = new Map(profilesData.map(p => [p.id, p]));
+        }
       }
+
+      // Get user's liked/favorited videos
+      let likedVideoIds: Set<string> = new Set();
+      let favoritedVideoIds: Set<string> = new Set();
+      
+      if (userId) {
+        const [likesResult, favoritesResult] = await Promise.all([
+          supabase.from('date_mi_video_likes').select('video_id').eq('user_id', userId),
+          supabase.from('date_mi_video_favorites').select('video_id').eq('user_id', userId),
+        ]);
+        
+        if (likesResult.data) {
+          likedVideoIds = new Set(likesResult.data.map(l => l.video_id));
+        }
+        if (favoritesResult.data) {
+          favoritedVideoIds = new Set(favoritesResult.data.map(f => f.video_id));
+        }
+      }
+
+      // Format videos with profile data
+      const formattedVideos: ShortVideo[] = videosData.map(item => {
+        const profile = profilesMap.get(item.profile_id);
+        return {
+          id: item.id,
+          videoUrl: item.video_url,
+          thumbnailUrl: item.thumbnail_url,
+          userId: item.user_id,
+          userProfileId: profile?.id || item.profile_id,
+          displayName: profile?.display_name || 'User',
+          profilePicture: profile?.profile_pictures?.[0],
+          caption: item.caption,
+          likes: item.likes_count || 0,
+          comments: item.comments_count || 0,
+          favorites: item.favorites_count || 0,
+          views: item.views_count || 0,
+          isLiked: likedVideoIds.has(item.id),
+          isFavorited: favoritedVideoIds.has(item.id),
+          createdAt: item.created_at,
+        };
+      });
+
+      setVideos(formattedVideos);
+    } catch (error) {
+      const friendly = getUserFacingError(error, {
+        action: 'load videos',
+        displayStyle: 'alert',
+      });
+      Alert.alert(friendly.title, friendly.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-
-    // Format videos with profile data
-    const formattedVideos: ShortVideo[] = videosData.map(item => {
-      const profile = profilesMap.get(item.profile_id);
-      return {
-        id: item.id,
-        videoUrl: item.video_url,
-        thumbnailUrl: item.thumbnail_url,
-        userId: item.user_id,
-        userProfileId: profile?.id || item.profile_id,
-        displayName: profile?.display_name || 'User',
-        profilePicture: profile?.profile_pictures?.[0],
-        caption: item.caption,
-        likes: item.likes_count || 0,
-        comments: item.comments_count || 0,
-        favorites: item.favorites_count || 0,
-        views: item.views_count || 0,
-        isLiked: likedVideoIds.has(item.id),
-        isFavorited: favoritedVideoIds.has(item.id),
-        createdAt: item.created_at,
-      };
-    });
-
-    setVideos(formattedVideos);
-  } catch (error) {
-    const friendly = getUserFacingError(error, {
-      action: 'load videos',
-      displayStyle: 'alert',
-    });
-    Alert.alert(friendly.title, friendly.message);
-  } finally {
-    setLoading(false);
-    setRefreshing(false);
-  }
-};
+  };
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -174,33 +177,48 @@ const loadVideos = async () => {
 
     setLikingVideoId(video.id);
     
-    try {
-      const newIsLiked = !video.isLiked;
-      const likeDelta = newIsLiked ? 1 : -1;
+    const newIsLiked = !video.isLiked;
+    try {     
 
       // Optimistic update
       setVideos(prev => prev.map(v =>
         v.id === video.id
-          ? { ...v, isLiked: newIsLiked, likes: v.likes + likeDelta }
+          ? { ...v, isLiked: newIsLiked, likes: v.likes + (newIsLiked ? 1 : -1) }
           : v
       ));
 
       if (newIsLiked) {
-        await supabase.from('date_mi_video_likes').insert({
+        // CREATE the like record
+        const { error: insertError } = await supabase
+          .from('date_mi_video_likes')
+          .insert({
+            video_id: video.id,
+            user_id: userId,
+          });
+        
+        if (insertError) throw insertError;
+        
+        // Increment the counter
+        await supabase.rpc('increment_video_likes', {
           video_id: video.id,
-          user_id: userId,
+          delta: 1,
         });
       } else {
-        await supabase.from('date_mi_video_likes')
+        // DELETE the like record
+        const { error: deleteError } = await supabase
+          .from('date_mi_video_likes')
           .delete()
           .eq('video_id', video.id)
           .eq('user_id', userId);
+        
+        if (deleteError) throw deleteError;
+        
+        // Decrement the counter
+        await supabase.rpc('increment_video_likes', {
+          video_id: video.id,
+          delta: -1,
+        });
       }
-
-      await supabase.rpc('increment_video_likes', {
-        video_id: video.id,
-        delta: likeDelta,
-      });
     } catch (error) {
       // Revert on error
       setVideos(prev => prev.map(v =>
@@ -228,30 +246,45 @@ const loadVideos = async () => {
     
     try {
       const newIsFavorited = !video.isFavorited;
-      const favoriteDelta = newIsFavorited ? 1 : -1;
 
       setVideos(prev => prev.map(v =>
         v.id === video.id
-          ? { ...v, isFavorited: newIsFavorited, favorites: v.favorites + favoriteDelta }
+          ? { ...v, isFavorited: newIsFavorited, favorites: v.favorites + (newIsFavorited ? 1 : -1) }
           : v
       ));
 
       if (newIsFavorited) {
-        await supabase.from('date_mi_video_favorites').insert({
+        // CREATE the favorite record
+        const { error: insertError } = await supabase
+          .from('date_mi_video_favorites')
+          .insert({
+            video_id: video.id,
+            user_id: userId,
+          });
+        
+        if (insertError) throw insertError;
+        
+        // Increment the counter
+        await supabase.rpc('increment_video_favorites', {
           video_id: video.id,
-          user_id: userId,
+          delta: 1,
         });
       } else {
-        await supabase.from('date_mi_video_favorites')
+        // DELETE the favorite record
+        const { error: deleteError } = await supabase
+          .from('date_mi_video_favorites')
           .delete()
           .eq('video_id', video.id)
           .eq('user_id', userId);
+        
+        if (deleteError) throw deleteError;
+        
+        // Decrement the counter
+        await supabase.rpc('increment_video_favorites', {
+          video_id: video.id,
+          delta: -1,
+        });
       }
-
-      await supabase.rpc('increment_video_favorites', {
-        video_id: video.id,
-        delta: favoriteDelta,
-      });
     } catch (error) {
       setVideos(prev => prev.map(v =>
         v.id === video.id
@@ -348,7 +381,10 @@ const loadVideos = async () => {
           </TouchableOpacity>
           
           {/* Comment Button */}
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => setSelectedVideoForComments(item)}
+          >
             <Ionicons name="chatbubble-outline" size={32} color="#6012f1" />
             <Text style={styles.actionCount}>{item.comments}</Text>
           </TouchableOpacity>
@@ -382,6 +418,13 @@ const loadVideos = async () => {
             </Text>
           )}
         </View>
+
+        <VideoCommentsModal
+            visible={!!selectedVideoForComments}
+            onClose={() => setSelectedVideoForComments(null)}
+            videoId={selectedVideoForComments?.id || ''}
+            userId={userId}
+          />
       </View>
     );
   };
