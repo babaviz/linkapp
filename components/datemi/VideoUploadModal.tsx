@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../services/supabaseClient';
 import { getUserFacingError } from '../../utils/userFacingError';
+import { decode } from 'base64-arraybuffer';
 
 const { width: screenWidth } = Dimensions.get('window');
 const MAX_DURATION_SECONDS = 60;
@@ -180,14 +181,29 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     }
   };
 
-  const compressVideo = async (uri: string): Promise<string> => {
-    // Note: For production, you might want to use a video compression library
-    // For now, we'll return the original URI and rely on validation
-    // Consider using expo-video-compressor or similar for actual compression
-    return uri;
+  // Memory-efficient upload using blob
+  const uploadFileInChunks = async (uri: string, fileName: string) => {
+    try {
+      // Read file as blob using fetch
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      // Upload blob directly (more memory efficient than base64)
+      const { data, error } = await supabase.storage
+        .from('datemi-short-videos')
+        .upload(fileName, blob, {
+          contentType: 'video/mp4',
+          cacheControl: '3600',
+        });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      throw error;
+    }
   };
 
-  const handleUpload = async () => {
+ const handleUpload = async () => {
     if (!userId) {
       Alert.alert('Error', 'You must be signed in to upload videos.');
       return;
@@ -198,7 +214,6 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       return;
     }
 
-    // Re-validate before upload
     if (selectedVideo.fileSize && selectedVideo.fileSize > MAX_FILE_SIZE_BYTES) {
       setValidationError(`Video exceeds ${MAX_FILE_SIZE_MB}MB limit`);
       return;
@@ -208,39 +223,38 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     setUploadProgress(0);
 
     try {
-      // Compress if needed (simulate progress)
+      setUploadProgress(10);
+      
+      const fileExtension = selectedVideo.name.split('.').pop() || 'mp4';
+      const fileName = `${userId}/${Date.now()}_video.${fileExtension}`;
+      
       setUploadProgress(20);
       
-      let videoUri = selectedVideo.uri;
-      if (selectedVideo.fileSize && selectedVideo.fileSize > MAX_FILE_SIZE_BYTES * 0.8) {
-        videoUri = await compressVideo(selectedVideo.uri);
-      }
-      
-      setUploadProgress(40);
-      
-      // Read video file
-      const base64 = await FileSystem.readAsStringAsync(videoUri, {
+      // Read file as base64 then convert to ArrayBuffer
+      const base64 = await FileSystem.readAsStringAsync(selectedVideo.uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
       
-      setUploadProgress(60);
+      setUploadProgress(40);
       
-      const fileData = Buffer.from(base64, 'base64');
-      const fileName = `${userId}/${Date.now()}_${selectedVideo.name}`;
+      // Convert base64 to ArrayBuffer
+      const arrayBuffer = decode(base64);
       
-      // Upload to Supabase storage with progress tracking
+      setUploadProgress(50);
+      
+      // Upload ArrayBuffer
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('datemi-short-videos')
-        .upload(fileName, fileData, {
+        .upload(fileName, arrayBuffer, {
           contentType: 'video/mp4',
           cacheControl: '3600',
         });
 
       if (uploadError) throw uploadError;
       
-      setUploadProgress(80);
+      setUploadProgress(70);
 
-      // Get public URL
+      // Rest of the code remains the same...
       const { data: urlData } = supabase.storage
         .from('datemi-short-videos')
         .getPublicUrl(fileName);
@@ -249,7 +263,6 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         throw new Error('Failed to get video URL');
       }
 
-      // Get current user's profile
       const { data: profileData, error: profileError } = await supabase
         .from('date_mi_profiles')
         .select('id')
@@ -258,24 +271,30 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
       if (profileError) throw profileError;
 
-      setUploadProgress(90);
+      setUploadProgress(85);
 
-      // Save video metadata to database
+      const insertData: any = {
+        video_url: urlData.publicUrl,
+        user_id: userId,
+        profile_id: profileData.id,
+        caption: caption.trim() || null,
+        likes_count: 0,
+        comments_count: 0,
+        favorites_count: 0,
+        views_count: 0,
+        is_active: true,
+      };
+
+      if (selectedVideo.duration !== undefined) {
+        insertData.duration = Math.round(selectedVideo.duration);
+      }
+      if (selectedVideo.fileSize !== undefined) {
+        insertData.file_size = selectedVideo.fileSize;
+      }
+
       const { error: insertError } = await supabase
         .from('date_mi_short_videos')
-        .insert({
-          video_url: urlData.publicUrl,
-          user_id: userId,
-          profile_id: profileData.id,
-          caption: caption.trim() || null,
-          likes_count: 0,
-          comments_count: 0,
-          favorites_count: 0,
-          views_count: 0,
-          is_active: true,
-          duration: selectedVideo.duration || null,
-          file_size: selectedVideo.fileSize || null,
-        });
+        .insert(insertData);
 
       if (insertError) throw insertError;
       
@@ -292,6 +311,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         }
       ]);
     } catch (error) {
+      console.error('Upload error:', error);
       const friendly = getUserFacingError(error, {
         action: 'upload this video',
         displayStyle: 'alert',
@@ -529,7 +549,6 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
               </View>
             </View>
           )}
-          
 
           {/* Guidelines */}
           <View style={styles.guidelinesContainer}>
