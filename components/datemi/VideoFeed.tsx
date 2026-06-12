@@ -673,6 +673,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
           { useNativeDriver: true }
         )}
         scrollEventThrottle={16}
+        style={[{top:-70}]}
       />
       
       <TouchableOpacity 

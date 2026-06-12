@@ -172,7 +172,7 @@ const FancyTab: React.FC<{
 
         {/* Short Term Tab */}
         <TouchableOpacity
-          style={styles.tabButton}
+          style={ activeTab === 'short_term' ? styles.tabButton :[styles.tabButtonTranparent,styles.tabButton]}
           onPress={() => onTabPress('short_term')}
           activeOpacity={0.9}
         >
@@ -630,8 +630,9 @@ export default function DateMiBrowseScreen() {
       />
       
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top,backgroundColor: activeTab === 'short_term' ?'rgba(107, 70, 193, 0.95)':'rgb(0, 0, 0)' }]}>
-        <View style={styles.headerContent}>
+      <View style={[styles.header, {zIndex:1, paddingTop: insets.top,backgroundColor: activeTab === 'short_term' ?'rgba(107, 70, 193, 0.95)':'rgba(0, 0, 0, 0)' }]}>
+        {activeTab === 'short_term' && (
+        <View style={styles.headerContent}>          
           <View style={styles.headerLeft}>
             <Text style={styles.emoji}>{activeTab === 'short_term' ? '💕' : '🎬'}</Text>
             <StandardScreenTitle color="#FFFFFF" testID="datemi-screen-title">
@@ -642,12 +643,11 @@ export default function DateMiBrowseScreen() {
               <Text style={styles.ageIndicatorText}>18+ Only</Text>
             </View>
           </View>
-          
           <TouchableOpacity onPress={() => setShowMenu(true)} style={styles.menuButton} activeOpacity={0.8}>
             <Feather name="menu" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
-
+        )}
         {/* Fancy Notch-like Tabs */}
         <FancyTab activeTab={activeTab} onTabPress={handleTabPress} />
       </View>
@@ -763,8 +763,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     marginHorizontal: 20,
     marginBottom: 0,
+    marginTop: 10,
     borderRadius: 30,
-    padding: 4,
+    padding: 0,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -793,7 +794,7 @@ const styles = StyleSheet.create({
   tabContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   tabEmoji: {
     fontSize: 18,
@@ -801,10 +802,16 @@ const styles = StyleSheet.create({
   tabButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
+    color: '#6B46C1',
   },
   tabButtonTextActive: {
     color: '#6B46C1',
+  },
+  tabButtonTranparent:{
+    color:'#6B46C1',
+    borderWidth: 1,
+    borderColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.66)',
   },
   
   profileCard: { width: cardWidth, marginBottom: 6 },
