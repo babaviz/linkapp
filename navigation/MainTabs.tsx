@@ -116,12 +116,9 @@ const TabIcon = ({ focused, iconName, label, serviceColor, badgeCount }: {
         position: 'absolute',
         width: indicatorSize * 1.1,
         height: indicatorSize * 0.85,
-        backgroundColor: focused ? `${activeColor}20` : 'transparent',
-        borderRadius: 24,
+        borderRadius: 0,
         opacity: focused ? 1 : 0,
         transform: [{ scale: scaleAnim }],
-        borderWidth: focused ? 1.5 : 0,
-        borderColor: `${activeColor}30`,
       }} />
       
       {/* Icon and label container - ensures proper alignment */}
@@ -361,7 +358,7 @@ export default function MainTabs() {
             <View style={{ flex: 1 }}>
               {/* Gradient border wrapper */}
               <LinearGradient
-                colors={['#3B82F6', '#06B6D4', '#6366F1']}
+                colors={['#ffffff', '#ffffff', '#ffffff']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -403,7 +400,7 @@ export default function MainTabs() {
             paddingHorizontal: 0,
             paddingVertical: 2,
             marginHorizontal: 0,
-            borderRadius: 20,
+            borderRadius: 0,
             height: '100%',
             minWidth: 0,
             width: 'auto',
@@ -552,7 +549,7 @@ const tipStyles = StyleSheet.create({
     shadowColor: '#3B82F6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,
-    shadowRadius: 12,
+    shadowRadius: 0,
     borderWidth: 1,
     borderColor: '#DBEAFE',
     gap: 10,
@@ -568,7 +565,7 @@ const tipStyles = StyleSheet.create({
   iconWrapper: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 0,
     backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
